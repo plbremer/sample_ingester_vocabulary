@@ -1,11 +1,25 @@
 rule parse_genes_human:
     output:
         "results/individual_vocabulary_jsons/genes_human.json"
-    conda:
-        "../binbase_sample_ingester.yml"
+    #lot of broken stuff with mamba. will try to simply keep one environment and run in that
+    # conda:
+    #     "../binbase_sample_ingester.yml"
     shell:
         "python3 ./code/genetsvparser.py"
 
+rule parse_ncbi:
+    output:
+        "results/individual_nxs/ncbi_nx.bin"
+    shell:
+        "python3 ./code/nxparser_ncbi.py"
+
+rule parse_mesh:
+    output:
+        "results/individual_nxs/mesh_nx.bin"
+    shell:
+        "python3 ./code/nxparser_mesh.py"
+
+                
 # rule step_0_c_complete_pipeline_input:
 #     input:
 #         "../results/{min_fold_change}/step_0_b_shape_aws_pull_to_pipeline_input/dummy.txt"
