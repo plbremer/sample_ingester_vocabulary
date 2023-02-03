@@ -1,0 +1,3 @@
+Building DAG of jobs...
+MissingRuleException:
+No rule to produce results/individual_vocabulary_jsons/genes_human.json (if you use input functions make sure that they don't raise unexpected exceptions).
