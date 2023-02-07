@@ -17,15 +17,15 @@ class GeneTSVParser:
 
         self.total_feature_node_id_dict=dict()
         for index, series in self.gene_panda.iterrows():
-            self.total_feature_node_id_dict[series['Symbol']]={
-                'node_ids':[series['NCBI GeneID']],
-                'formal_word':[series['Description']]
-            }
+            self.total_feature_node_id_dict[series['NCBI GeneID']]=[
+                series['Symbol'],
+                series['Description']
+            ]
 
-            self.total_feature_node_id_dict[series['Description']]={
-                'node_ids':[series['NCBI GeneID']],
-                'formal_word':[series['Description']]
-            }
+            # self.total_feature_node_id_dict[series['Description']]={
+            #     'node_ids':[series['NCBI GeneID']],
+            #     'formal_word':[series['Description']]
+            # }
 
 
 if __name__=="__main__":
