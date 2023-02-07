@@ -17,7 +17,12 @@ class GeneTSVParser:
 
         self.total_feature_node_id_dict=dict()
         for index, series in self.gene_panda.iterrows():
-            self.total_feature_node_id_dict[series['NCBI GeneID']]=[
+            
+            self.total_feature_node_id_dict[series['NCBI GeneID']]=dict()
+            
+            self.total_feature_node_id_dict[series['NCBI GeneID']]['main_string']=series['Description']
+
+            self.total_feature_node_id_dict[series['NCBI GeneID']]['valid_strings']=[
                 series['Symbol'],
                 series['Description']
             ]

@@ -1,3 +1,5 @@
+shrink_ncbi_nx='True'
+
 rule parse_genes_human:
     output:
         "results/individual_vocabulary_jsons/genes_human.json"
@@ -18,6 +20,22 @@ rule parse_mesh:
         "results/individual_nxs/mesh_nx.bin"
     shell:
         "python3 ./code/nxparser_mesh.py"
+
+rule ncbi_to_json:
+    input:
+        "results/individual_nxs/ncbi_nx.bin"
+    output:
+        "results/individual_vocabulary_jsons/ncbi.json"
+    shell:
+        "python3 ./code/NodeIDDictParser.py ncbi True" 
+
+rule mesh_to_json:
+    input:
+        "results/individual_nxs/mesh_nx.bin"
+    output:
+        "results/individual_vocabulary_jsons/mesh.json"
+    shell:
+        "python3 ./code/NodeIDDictParser.py mesh currently_irrelevant"
 
                 
 # rule step_0_c_complete_pipeline_input:
