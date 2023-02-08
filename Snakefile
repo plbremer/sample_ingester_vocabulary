@@ -7,19 +7,19 @@ rule parse_genes_human:
     # conda:
     #     "../binbase_sample_ingester.yml"
     shell:
-        "python3 ./code/genetsvparser.py"
+        "python3 code/genetsvparser.py"
 
 rule parse_ncbi:
     output:
         "results/individual_nxs/ncbi_nx.bin"
     shell:
-        "python3 ./code/nxparser_ncbi.py"
+        "python3 code/nxparser_ncbi.py"
 
 rule parse_mesh:
     output:
         "results/individual_nxs/mesh_nx.bin"
     shell:
-        "python3 ./code/nxparser_mesh.py"
+        "python3 code/nxparser_mesh.py"
 
 rule ncbi_to_json:
     input:
@@ -27,7 +27,7 @@ rule ncbi_to_json:
     output:
         "results/individual_vocabulary_jsons/ncbi.json"
     shell:
-        "python3 ./code/NodeIDDictParser.py ncbi True" 
+        "python3 code/NodeIDDictParser.py ncbi True" 
 
 rule mesh_to_json:
     input:
@@ -35,8 +35,17 @@ rule mesh_to_json:
     output:
         "results/individual_vocabulary_jsons/mesh.json"
     shell:
-        "python3 ./code/NodeIDDictParser.py mesh currently_irrelevant"
+        "python3 code/NodeIDDictParser.py mesh currently_irrelevant"
 
+rule make_conglomerate_json:
+    input:
+        "results/individual_vocabulary_jsons/mesh.json",
+        "results/individual_vocabulary_jsons/ncbi.json",
+        "results/individual_vocabulary_jsons/genes_human.json"
+    output:
+        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
+    shell:
+        "python3 code/conglomeratejsonmaker.py"  
                 
 # rule step_0_c_complete_pipeline_input:
 #     input:
@@ -50,4 +59,4 @@ rule mesh_to_json:
 #     #script:
 #     #    "/home/rictuar/coding_projects/fiehn_work/gc_bin_base/code/create_organ_networkx.py"
 #     shell:
-#         "python3 ./code/fill_in_additional_columns.py {min_fold_change} {named_or_all}"
+#         "python3 code/fill_in_additional_columns.py {min_fold_change} {named_or_all}"

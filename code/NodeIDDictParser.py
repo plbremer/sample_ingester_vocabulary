@@ -1,5 +1,4 @@
 import json
-from json.tool import main
 import networkx as nx
 from collections.abc import Iterable
 import sys
@@ -127,7 +126,7 @@ class NodeIDDictParser:
             self.node_id_to_strings_dict[temp_node]=dict()
             #self.node_id_to_strings_dict[temp_node]=[]
 
-            self.node_id_to_strings_dict[temp_node]['valid_strings']=[]
+            self.node_id_to_strings_dict[temp_node]['valid_strings']=set()
 
             #self.total_feature_node_id_dict[series['NCBI GeneID']]['valid_strings']
 
@@ -143,13 +142,14 @@ class NodeIDDictParser:
                         if isinstance(element,list)==True:
                             #print('found a nested list')
                             raise Exception('found a nested list')
-                        for element in self.input_nx.nodes[temp_node][temp_attribute]:
-                            self.node_id_to_strings_dict[temp_node]['valid_strings'].append(element)
+                        self.node_id_to_strings_dict[temp_node]['valid_strings'].add(element)
                 else:
-                    self.node_id_to_strings_dict[temp_node]['valid_strings'].append(
+                    self.node_id_to_strings_dict[temp_node]['valid_strings'].add(
                         self.input_nx.nodes[temp_node][temp_attribute]
                     )
 
+            #set not json serializable
+            self.node_id_to_strings_dict[temp_node]['valid_strings']=list(self.node_id_to_strings_dict[temp_node]['valid_strings'])
             self.node_id_to_strings_dict[temp_node]['main_string']=self.input_nx.nodes[temp_node][self.main_attribute]
 
                 
