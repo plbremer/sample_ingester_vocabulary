@@ -46,7 +46,24 @@ rule make_conglomerate_json:
         "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
     shell:
         "python3 code/conglomeratejsonmaker.py"  
-                
+
+rule make_conglomerate_json_valid_string_as_key:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
+    output:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    shell:
+        "python3 code/conglomeratejsonvalidstringaskey.py"  
+
+rule make_vocabulary_list:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    output:
+        "results/training_set/valid_string_list_dataframe.bin"
+    shell:
+        "python3 code/vocabularyextracter.py"  
+
+
 # rule step_0_c_complete_pipeline_input:
 #     input:
 #         "../results/{min_fold_change}/step_0_b_shape_aws_pull_to_pipeline_input/dummy.txt"
