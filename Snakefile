@@ -63,6 +63,14 @@ rule make_vocabulary_list:
     shell:
         "python3 code/vocabularyextracter.py"  
 
+rule make_curation_models:
+    input:
+        "results/training_set/valid_string_list_dataframe.bin"
+    output:
+        "results/models/tfidfVectorizer.bin",
+        "results/models/NearestNeighbors.bin",
+    shell:
+        "python3 code/searchmodelcreator.py"      
 
 # rule step_0_c_complete_pipeline_input:
 #     input:
