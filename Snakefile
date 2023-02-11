@@ -70,7 +70,27 @@ rule make_curation_models:
         "results/models/tfidfVectorizer.bin",
         "results/models/NearestNeighbors.bin",
     shell:
-        "python3 code/searchmodelcreator.py"      
+        "python3 code/searchmodelcreator.py"   
+
+rule copy_datasets_to_frontend:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json",
+        "results/training_set/valid_string_list_dataframe.bin",
+        "results/models/tfidfVectorizer.bin",
+        "results/models/NearestNeighbors.bin",
+    output:
+        "../frontend/additional_files/combined_valid_string_as_key.json",
+        "../frontend/additional_files/valid_string_list_dataframe.bin",
+        "../frontend/additional_files/tfidfVectorizer.bin",
+        "../frontend/additional_files/NearestNeighbors.bin",    
+    shell:
+        '''
+        cp results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json ../frontend/additional_files/ 
+        cp results/training_set/valid_string_list_dataframe.bin ../frontend/additional_files/ 
+        cp results/models/tfidfVectorizer.bin ../frontend/additional_files/ 
+        cp results/models/NearestNeighbors.bin ../frontend/additional_files/
+        '''
+
 
 # rule step_0_c_complete_pipeline_input:
 #     input:
