@@ -25,7 +25,7 @@ class NXParserUnits:
 
         nodes_to_remove=set()
         for temp_node in self.units_nx.nodes:
-            if 'PAKU' in temp_node:
+            if 'PATO' in temp_node:
                 #if 'prefix_slim' in self.units_nx.nodes[temp_node]['subset']:    
                     nodes_to_remove.add(temp_node)
         for element in nodes_to_remove:

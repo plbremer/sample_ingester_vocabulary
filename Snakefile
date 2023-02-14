@@ -43,6 +43,14 @@ rule mesh_to_json:
     shell:
         "python3 code/NodeIDDictParser.py mesh currently_irrelevant"
 
+rule unit_to_json:
+    input:
+        "results/individual_nxs/unit_nx.bin"
+    output:
+        "results/individual_vocabulary_jsons/unit.json"
+    shell:
+        "python3 code/NodeIDDictParser.py unit True"
+
 rule make_conglomerate_json:
     input:
         "results/individual_vocabulary_jsons/mesh.json",

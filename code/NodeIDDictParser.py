@@ -50,6 +50,22 @@ class NodeIDDictParser:
         '''
         pass
 
+    def reduce_unit_taxonomy(self):
+        '''
+        not so much a reduction as a cleaning
+        the synonym attributes are very poorly arranged
+        '''
+
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node]:
+                new_synonym_list=list()
+                for temp_syn in self.input_nx.nodes[temp_node]['synonym']:
+                    new_synonym_list.append(
+                        temp_syn.split('\"')[1]
+                    )
+
+        
+
     #def define_attributes_to_maintain(self,attributes):
 
     # def flatten(self,xs):
@@ -182,3 +198,17 @@ if __name__ == "__main__":
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/mesh.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)       
+
+    elif ontology=='unit':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/unit_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+
+        if drop_nodes==True:
+            my_NodeIDDictParser.reduce_unit_taxonomy()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/unit.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
