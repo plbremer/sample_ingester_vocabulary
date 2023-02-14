@@ -5,3 +5,5 @@
 *.tsv
 .snakemake/*
 code/.snakemake/
+*.obo
+resources/fda_drugs/*

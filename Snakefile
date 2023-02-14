@@ -21,6 +21,12 @@ rule parse_mesh:
     shell:
         "python3 code/nxparser_mesh.py"
 
+rule parse_units:
+    output:
+        'results/individual_nxs/unit_nx.bin'
+    shell:
+        'python3 code/nxparser_units.py'
+
 rule ncbi_to_json:
     input:
         "results/individual_nxs/ncbi_nx.bin"
