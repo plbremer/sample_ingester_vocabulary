@@ -60,9 +60,14 @@ class NodeIDDictParser:
             if 'synonym' in self.input_nx.nodes[temp_node]:
                 new_synonym_list=list()
                 for temp_syn in self.input_nx.nodes[temp_node]['synonym']:
-                    new_synonym_list.append(
-                        temp_syn.split('\"')[1]
-                    )
+                    if '\"' in temp_syn:
+                        new_synonym_list.append(
+                            temp_syn.split('\"')[1]
+                        )
+                    else:
+                        new_synonym_list.append(temp_syn)
+
+                self.input_nx.nodes[temp_node]['synonym']=new_synonym_list
 
         
 
@@ -207,7 +212,7 @@ if __name__ == "__main__":
         )
 
 
-        if drop_nodes==True:
+        if drop_nodes=='True':
             my_NodeIDDictParser.reduce_unit_taxonomy()
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/unit.json', 'w') as fp:

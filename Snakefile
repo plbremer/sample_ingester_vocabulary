@@ -9,6 +9,15 @@ rule parse_genes_human:
     shell:
         "python3 code/genetsvparser.py"
 
+rule parse_drugs:
+    output:
+        "results/individual_vocabulary_jsons/drugs.json"
+    #lot of broken stuff with mamba. will try to simply keep one environment and run in that
+    # conda:
+    #     "../binbase_sample_ingester.yml"
+    shell:
+        "python3 code/fdadrugtsvparser.py"
+
 rule parse_ncbi:
     output:
         "results/individual_nxs/ncbi_nx.bin"
@@ -55,7 +64,9 @@ rule make_conglomerate_json:
     input:
         "results/individual_vocabulary_jsons/mesh.json",
         "results/individual_vocabulary_jsons/ncbi.json",
-        "results/individual_vocabulary_jsons/genes_human.json"
+        "results/individual_vocabulary_jsons/genes_human.json",
+        "results/individual_vocabulary_jsons/unit.json",
+        "results/individual_vocabulary_jsons/drugs.json"
     output:
         "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
     shell:
