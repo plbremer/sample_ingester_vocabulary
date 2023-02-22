@@ -16,13 +16,15 @@ rule copy_datasets_to_frontend:
         # "results/training_set/valid_string_list_dataframe.bin",
         expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("results/models/unique_valid_strings_{headers}_panda.bin",headers=gui_headers)
+        expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
         #"resources/parameter_files/subset_per_heading.json"
     output:
         "../frontend/additional_files/conglomerate_vocabulary_panda.bin",
         expand("../frontend/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("../frontend/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("../frontend/additional_files/unique_valid_strings_{headers}_panda.bin",headers=gui_headers)
+        expand("../frontend/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        expand("../frontend/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
         #"../frontend/additional_files/subset_per_heading.json"   
     shell:
         '''
@@ -164,7 +166,8 @@ rule make_curation_models:
         # "results/models/NearestNeighbors.bin",
         expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("results/models/unique_valid_strings_{headers}_panda.bin",headers=gui_headers)
+        expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
     shell:
         "python3 code/searchmodelcreator.py"
 

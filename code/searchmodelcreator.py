@@ -30,7 +30,13 @@ class SearchModelCreator:
                         self.conglomerate_panda.node_id.str.contains(temp_subset_definition)
                     ]
                 )
+            
             temp_conglomerate_panda_subset=pd.concat(temp_panda_subset_list,axis='index',ignore_index=True)
+            #when the models translates chosen valid strings to nodes, we dont want to ahea access to all of the valid stirngs
+            #rather just those specified in the ubset. a good example of this is DDT which is a gnee and a pesticide
+            #so we output this panda
+            temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
+            
             temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
 
             #when the nearest neighbors model gets neighbors, it only knows about indices of points in training set
@@ -40,7 +46,7 @@ class SearchModelCreator:
                 'valid_strings_unique':temp_model_vocabulary
             }
             temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
-            temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'_panda.bin')
+            temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
             #unique_v
             #hold=input('hold')
 
