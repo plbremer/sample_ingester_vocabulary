@@ -7,3 +7,4 @@
 code/.snakemake/
 *.obo
 resources/fda_drugs/*
+resources/parameter_files/*

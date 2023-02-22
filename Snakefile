@@ -1,8 +1,42 @@
+import json
+header_vocabulary_json_address="resources/parameter_files/subset_per_heading.json"
+with open(header_vocabulary_json_address,'r') as f:
+    header_vocabulary_json=json.load(f)
+gui_headers=header_vocabulary_json.keys()
+
 shrink_ncbi_nx='True'
 
-rule parse_genes_human:
+
+
+
+
+rule copy_datasets_to_frontend:
+    input:
+        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin",
+        # "results/training_set/valid_string_list_dataframe.bin",
+        expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers)
     output:
-        "results/individual_vocabulary_jsons/genes_human.json"
+        "../frontend/additional_files/conglomerate_vocabulary_panda.bin",
+        expand("../frontend/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        expand("../frontend/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers)   
+    shell:
+        '''
+        cp results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin ../frontend/additional_files/ 
+        cp results/models/* ../frontend/additional_files/ 
+        '''
+
+
+
+
+
+
+
+
+
+rule parse_genesHuman:
+    output:
+        "results/individual_vocabulary_jsons/genesHuman.json"
     #lot of broken stuff with mamba. will try to simply keep one environment and run in that
     # conda:
     #     "../binbase_sample_ingester.yml"
@@ -64,7 +98,7 @@ rule make_conglomerate_json:
     input:
         "results/individual_vocabulary_jsons/mesh.json",
         "results/individual_vocabulary_jsons/ncbi.json",
-        "results/individual_vocabulary_jsons/genes_human.json",
+        "results/individual_vocabulary_jsons/genesHuman.json",
         "results/individual_vocabulary_jsons/unit.json",
         "results/individual_vocabulary_jsons/drugs.json"
     output:
@@ -80,41 +114,63 @@ rule make_conglomerate_json_valid_string_as_key:
     shell:
         "python3 code/conglomeratejsonvalidstringaskey.py"  
 
-rule make_vocabulary_list:
+rule make_panda_from_conglomerate_file:
     input:
         "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
     output:
-        "results/training_set/valid_string_list_dataframe.bin"
+        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
     shell:
-        "python3 code/vocabularyextracter.py"  
+        "python3 code/pandafromconglomerate.py"  
+
+
+
+
+
+
+
+
+# this rule is no longer relevant and we moved to dataframe rather than json
+# rule make_vocabulary_list:
+#     input:
+#         "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+#     output:
+#         "results/training_set/valid_string_list_dataframe.bin"
+#     shell:
+#         "python3 code/vocabularyextracter.py"  
+
+
+
+
+
+
+
+
+
+
+
+
 
 rule make_curation_models:
     input:
-        "results/training_set/valid_string_list_dataframe.bin"
+        # "results/training_set/valid_string_list_dataframe.bin"
+        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
     output:
-        "results/models/tfidfVectorizer.bin",
-        "results/models/NearestNeighbors.bin",
+        # "results/models/tfidfVectorizer.bin",
+        # "results/models/NearestNeighbors.bin",
+        expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers)
     shell:
-        "python3 code/searchmodelcreator.py"   
+        "python3 code/searchmodelcreator.py"
 
-rule copy_datasets_to_frontend:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json",
-        "results/training_set/valid_string_list_dataframe.bin",
-        "results/models/tfidfVectorizer.bin",
-        "results/models/NearestNeighbors.bin",
-    output:
-        "../frontend/additional_files/combined_valid_string_as_key.json",
-        "../frontend/additional_files/valid_string_list_dataframe.bin",
-        "../frontend/additional_files/tfidfVectorizer.bin",
-        "../frontend/additional_files/NearestNeighbors.bin",    
-    shell:
-        '''
-        cp results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json ../frontend/additional_files/ 
-        cp results/training_set/valid_string_list_dataframe.bin ../frontend/additional_files/ 
-        cp results/models/tfidfVectorizer.bin ../frontend/additional_files/ 
-        cp results/models/NearestNeighbors.bin ../frontend/additional_files/
-        '''
+
+
+
+
+
+
+
+
+
 
 
 # rule step_0_c_complete_pipeline_input:

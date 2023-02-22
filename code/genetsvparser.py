@@ -41,5 +41,5 @@ if __name__=="__main__":
 
     my_GeneTSVParser=GeneTSVParser('resources/ncbi_genes_human.tsv')
     my_GeneTSVParser.create_attribute_to_node_id_from_panda()
-    with open('results/individual_vocabulary_jsons/genes_human.json', 'w') as fp:
+    with open('results/individual_vocabulary_jsons/genesHuman.json', 'w') as fp:
         json.dump(my_GeneTSVParser.total_feature_node_id_dict, fp,indent=4) 
