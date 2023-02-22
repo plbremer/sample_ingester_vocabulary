@@ -31,8 +31,20 @@ class SearchModelCreator:
                     ]
                 )
             temp_conglomerate_panda_subset=pd.concat(temp_panda_subset_list,axis='index',ignore_index=True)
-            temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string']
-        
+            temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
+
+            #when the nearest neighbors model gets neighbors, it only knows about indices of points in training set
+            #we need to map those points to actual strings
+            temp_model_vocabulary_dict={
+                'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
+                'valid_strings_unique':temp_model_vocabulary
+            }
+            temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
+            temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'_panda.bin')
+            #unique_v
+            #hold=input('hold')
+
+
             temp_TfidfVectorizer=TfidfVectorizer(
                 analyzer=trigrams,
                 #max_df=1,
