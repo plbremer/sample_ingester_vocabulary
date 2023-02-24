@@ -7,12 +7,8 @@ gui_headers=header_vocabulary_json.keys()
 shrink_ncbi_nx='True'
 
 
-
-
-
 rule copy_datasets_to_frontend:
     input:
-        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin",
         # "results/training_set/valid_string_list_dataframe.bin",
         expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
@@ -20,7 +16,6 @@ rule copy_datasets_to_frontend:
         expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
         #"resources/parameter_files/subset_per_heading.json"
     output:
-        "../frontend/additional_files/conglomerate_vocabulary_panda.bin",
         expand("../frontend/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("../frontend/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
         expand("../frontend/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
@@ -28,22 +23,29 @@ rule copy_datasets_to_frontend:
         #"../frontend/additional_files/subset_per_heading.json"   
     shell:
         '''
-        cp results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin ../frontend/additional_files/ 
         cp results/models/* ../frontend/additional_files/ 
         '''
         #cp resources/parameter_files/subset_per_heading.json ../frontend/additional_files/ 
-        
+        #cp results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin ../frontend/additional_files/ 
 
 
 
 
-
-
-
-
-rule parse_genesHuman:
+rule parse_sexes:
     output:
-        "results/individual_vocabulary_jsons/genesHuman.json"
+        "results/individual_vocabulary_jsons/sex.json",
+    #lot of broken stuff with mamba. will try to simply keep one environment and run in that
+    # conda:
+    #     "../binbase_sample_ingester.yml"
+    shell:
+        "python3 code/sexlistparser.py"
+
+
+
+rule parse_genes:
+    output:
+        "results/individual_vocabulary_jsons/genesHuman.json",
+        "results/individual_vocabulary_jsons/genesMusMusculus.json"
     #lot of broken stuff with mamba. will try to simply keep one environment and run in that
     # conda:
     #     "../binbase_sample_ingester.yml"
@@ -107,7 +109,9 @@ rule make_conglomerate_json:
         "results/individual_vocabulary_jsons/ncbi.json",
         "results/individual_vocabulary_jsons/genesHuman.json",
         "results/individual_vocabulary_jsons/unit.json",
-        "results/individual_vocabulary_jsons/drugs.json"
+        "results/individual_vocabulary_jsons/drugs.json",
+        "results/individual_vocabulary_jsons/genesMusMusculus.json",
+        "results/individual_vocabulary_jsons/sex.json"
     output:
         "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
     shell:
@@ -136,22 +140,14 @@ rule make_panda_from_conglomerate_file:
 
 
 
-# this rule is no longer relevant and we moved to dataframe rather than json
-rule make_vocabulary_list:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
-    output:
-        "results/training_set/valid_string_list_dataframe.bin"
-    shell:
-        "python3 code/vocabularyextracter.py"  
-
-
-
-
-
-
-
-
+# # this rule is no longer relevant and we moved to dataframe rather than json
+# rule make_vocabulary_list:
+#     input:
+#         "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+#     output:
+#         "results/training_set/valid_string_list_dataframe.bin"
+#     shell:
+#         "python3 code/vocabularyextracter.py"  
 
 
 
@@ -170,6 +166,15 @@ rule make_curation_models:
         expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
     shell:
         "python3 code/searchmodelcreator.py"
+
+
+
+
+
+
+
+
+
 
 
 

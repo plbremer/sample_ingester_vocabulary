@@ -43,3 +43,8 @@ if __name__=="__main__":
     my_GeneTSVParser.create_attribute_to_node_id_from_panda()
     with open('results/individual_vocabulary_jsons/genesHuman.json', 'w') as fp:
         json.dump(my_GeneTSVParser.total_feature_node_id_dict, fp,indent=4) 
+
+    my_GeneTSVParser=GeneTSVParser('resources/ncbi_genes_mus_musculus.tsv')
+    my_GeneTSVParser.create_attribute_to_node_id_from_panda()
+    with open('results/individual_vocabulary_jsons/genesMusMusculus.json', 'w') as fp:
+        json.dump(my_GeneTSVParser.total_feature_node_id_dict, fp,indent=4) 

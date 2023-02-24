@@ -19,7 +19,41 @@ class SearchModelCreator:
 
 
     def create_tfidf_matrix_per_header_defined(self):
+        '''
+        the basic idea is to scroll through all of the headers defined in the header dict
+        for each header, create the quadruplet (panda, vocab, tfidf, nearestneighbors) using
+        the subset of possible vocabulary that is specified by subsetting the main conglomerate panda using the
+        elements in the header dict's lists
+
+        if there is no subset defined, then we are starting with a blank vocabulary set. 
+        '''
         for temp_header in self.header_definition_json.keys(): 
+
+            if len(self.header_definition_json[temp_header])==0:
+                '''
+                this ended up being a little weirder than i thought it would. there is some duplicated code
+                '''
+                temp_conglomerate_panda_subset=self.conglomerate_panda.loc[
+                    self.conglomerate_panda.node_id.str.contains('thisisanimpossiblestringthatmakesapandawithnorows')
+                ]
+                temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
+                temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
+                temp_model_vocabulary_dict={
+                    'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
+                    'valid_strings_unique':temp_model_vocabulary
+                }
+                temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
+                temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
+                temp_TfidfVectorizer=TfidfVectorizer(
+                    analyzer=trigrams,
+                    #max_df=1,
+                    #min_df=0.001
+                )
+                #no fit transform
+                with open(self.output_directory_address+'tfidfVectorizer'+'_'+temp_header+'.bin','wb') as fp:
+                    pickle.dump(temp_TfidfVectorizer,fp)        
+                continue
+
             #collect all subset_definitions
             temp_subset_definitions=self.header_definition_json[temp_header]
 
@@ -64,6 +98,18 @@ class SearchModelCreator:
     def create_NearestNeighbors_model_per_header_defined(self):
         for temp_header in self.header_definition_json.keys():
         
+            if len(self.header_definition_json[temp_header])==0:
+                temp_NN_model=NearestNeighbors(
+                    n_neighbors=50,
+                    n_jobs=5,
+                    metric='cosine'
+                )          
+                #no fit, there is no matrix      
+                with open(self.output_directory_address+'NearestNeighbors'+'_'+temp_header+'.bin','wb') as fp:
+                    pickle.dump(temp_NN_model,fp)
+                continue
+
+
             temp_NN_model=NearestNeighbors(
                 n_neighbors=50,
                 n_jobs=5,
@@ -74,6 +120,11 @@ class SearchModelCreator:
                 pickle.dump(temp_NN_model,fp)
 
 if __name__ == "__main__":
+    '''
+    
+    '''
+    
+    
     my_SearchModelCreator=SearchModelCreator(
         'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
         'results/models/',
