@@ -17,7 +17,8 @@ class PandaFromConglomerate:
             'valid_string':[],
             'node_id':[],
             'main_string':[],
-            'ontology':[]
+            'ontology':[],
+            
         }
 
         for valid_string in conglomerate_json.keys():
@@ -26,8 +27,13 @@ class PandaFromConglomerate:
                 output_panda_dict['node_id'].append(mapped_node['node_id'])
                 output_panda_dict['main_string'].append(mapped_node['main_string'])
                 output_panda_dict['ontology'].append(mapped_node['node_id'].split('_')[0])
+                
 
         self.output_panda=pd.DataFrame.from_dict(output_panda_dict)
+
+        self.output_panda['valid_string']=self.output_panda['valid_string'].str.lower()
+
+        self.output_panda['use_count']=0
 
         self.output_panda.to_pickle(self.output_address)
 

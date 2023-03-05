@@ -1,4 +1,4 @@
-from nltk.util import trigrams
+#from nltk.util import trigrams
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 import json
@@ -9,12 +9,14 @@ import pandas as pd
 
 class SearchModelCreator:
 
-    def __init__(self,panda_containing_training_set_address,output_directory_address,header_subset_definitions_address):
+    def __init__(self,panda_containing_training_set_address,output_directory_address,header_subset_definitions_address,ngram_limit_address):
         self.conglomerate_panda=pd.read_pickle(panda_containing_training_set_address)
         #self.training_set=temp['valid_strings'].values
         self.output_directory_address=output_directory_address
         with open(header_subset_definitions_address, 'r') as f:
             self.header_definition_json=json.load(f) 
+        with open(ngram_limit_address, 'r') as f:
+            self.ngram_limit_json=json.load(f) 
         self.tfidf_matrix_dict=dict()
 
 
@@ -38,14 +40,16 @@ class SearchModelCreator:
                 ]
                 temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
                 temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
-                temp_model_vocabulary_dict={
-                    'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
-                    'valid_strings_unique':temp_model_vocabulary
-                }
+                # temp_model_vocabulary_dict={
+                #     'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
+                #     'valid_strings_unique':temp_model_vocabulary
+                # }
                 temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
                 temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
                 temp_TfidfVectorizer=TfidfVectorizer(
-                    analyzer=trigrams,
+                    #analyzer=trigrams,
+                    analyzer='char',
+                    ngram_range=self.ngram_limit_json[temp_header]
                     #max_df=1,
                     #min_df=0.001
                 )
@@ -86,7 +90,8 @@ class SearchModelCreator:
 
 
             temp_TfidfVectorizer=TfidfVectorizer(
-                analyzer=trigrams,
+                analyzer='char',
+                ngram_range=self.ngram_limit_json[temp_header],
                 #max_df=1,
                 #min_df=0.001
             )
@@ -128,7 +133,8 @@ if __name__ == "__main__":
     my_SearchModelCreator=SearchModelCreator(
         'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
         'results/models/',
-        'resources/parameter_files/subset_per_heading.json'
+        'resources/parameter_files/subset_per_heading.json',
+        'resources/parameter_files/ngram_limits_per_heading.json'
     )
     my_SearchModelCreator.create_tfidf_matrix_per_header_defined()
     my_SearchModelCreator.create_NearestNeighbors_model_per_header_defined()
