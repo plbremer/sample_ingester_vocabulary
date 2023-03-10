@@ -35,6 +35,14 @@ class PandaFromConglomerate:
 
         self.output_panda['use_count']=0
 
+        #for motivation, see the experimental jupyter notebook 'see_valid_string_to_main_string_redundancy'
+        non_species_panda=self.output_panda.loc[self.output_panda.ontology != 'ncbi']
+        species_panda=self.output_panda.loc[self.output_panda.ontology == 'ncbi']
+        species_panda=species_panda.drop_duplicates(subset=('valid_string','main_string'))
+        self.output_panda=pd.concat([species_panda,non_species_panda],ignore_index=True)
+
+
+
         self.output_panda.to_pickle(self.output_address)
 
 
