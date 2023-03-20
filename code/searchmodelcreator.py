@@ -92,8 +92,9 @@ class SearchModelCreator:
             temp_TfidfVectorizer=TfidfVectorizer(
                 analyzer='char',
                 ngram_range=self.ngram_limit_json[temp_header],
+                use_idf=False,
+                norm=None
                 #max_df=1,
-                #min_df=0.001
             )
             self.tfidf_matrix_dict[temp_header]=temp_TfidfVectorizer.fit_transform(temp_model_vocabulary)
             with open(self.output_directory_address+'tfidfVectorizer'+'_'+temp_header+'.bin','wb') as fp:

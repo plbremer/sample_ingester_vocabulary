@@ -57,7 +57,7 @@ class PandaFromConglomerate:
                 self.output_panda['main_lower'].isin(names_to_increase_use_count) 
             ),
             other=1
-        ).value_counts()
+        )
 
         self.output_panda.drop(
             'main_lower',
