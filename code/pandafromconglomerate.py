@@ -43,6 +43,28 @@ class PandaFromConglomerate:
 
 
 
+    def preload_use_counts(self,bindiscover_terms_used_address):
+    
+
+        use_count_panda=pd.read_csv(bindiscover_terms_used_address,sep='\t')
+
+        names_to_increase_use_count=use_count_panda.stack().str.lower().unique()
+
+        self.output_panda['main_lower']=self.output_panda.main_string.str.lower()
+
+        self.output_panda['use_count']=self.output_panda['use_count'].mask(
+            cond=(
+                self.output_panda['main_lower'].isin(names_to_increase_use_count) 
+            ),
+            other=1
+        ).value_counts()
+
+        self.output_panda.drop(
+            'main_lower',
+            axis='columns',
+            inplace=True
+        )
+
         self.output_panda.to_pickle(self.output_address)
 
 
@@ -55,4 +77,6 @@ if __name__=="__main__":
     )
 
     my_PandaFromConglomerate.convert_file()
+    my_PandaFromConglomerate.preload_use_counts('resources/bindiscover_metadata_for_use_counts.tsv')
+
 
