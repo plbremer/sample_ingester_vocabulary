@@ -38,6 +38,7 @@ class SearchModelCreator:
                 temp_conglomerate_panda_subset=self.conglomerate_panda.loc[
                     self.conglomerate_panda.node_id.str.contains('thisisanimpossiblestringthatmakesapandawithnorows')
                 ]
+
                 temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
                 temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
                 # temp_model_vocabulary_dict={
@@ -61,15 +62,26 @@ class SearchModelCreator:
             #collect all subset_definitions
             temp_subset_definitions=self.header_definition_json[temp_header]
 
+
+
             temp_panda_subset_list=list()
             for temp_subset_definition in temp_subset_definitions:
                 temp_panda_subset_list.append(
                     self.conglomerate_panda.loc[
                         self.conglomerate_panda.node_id.str.contains(temp_subset_definition)
-                    ]
+                    ].copy()
                 )
             
             temp_conglomerate_panda_subset=pd.concat(temp_panda_subset_list,axis='index',ignore_index=True)
+
+
+            temp_conglomerate_panda_subset.drop_duplicates(
+                subset=['valid_string','main_string'],
+                keep='first',
+                inplace=True
+            )
+
+
             #when the models translates chosen valid strings to nodes, we dont want to ahea access to all of the valid stirngs
             #rather just those specified in the ubset. a good example of this is DDT which is a gnee and a pesticide
             #so we output this panda

@@ -27,7 +27,7 @@ class NXParserUnits:
         for temp_node in self.units_nx.nodes:
             if 'PATO' in temp_node:
                 #if 'prefix_slim' in self.units_nx.nodes[temp_node]['subset']:    
-                    nodes_to_remove.add(temp_node)
+                nodes_to_remove.add(temp_node)
         for element in nodes_to_remove:
             self.units_nx.remove_node(element)  
 

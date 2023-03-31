@@ -69,7 +69,22 @@ class NodeIDDictParser:
 
                 self.input_nx.nodes[temp_node]['synonym']=new_synonym_list
 
-        
+    def clean_and_reduce_cellline_taxonomy(self):
+        '''
+        noticed two things: one, redundant synonyms. some nodeID X might have synonym Y repeated n times
+        two, noticed that the obo parser was not parsing synonyms correctly. "293/IL-1RI" RELATED []
+        was being picked up directly, wehn we just want what i sin the quotes
+        '''
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node]:
+                new_synonym_set=set()
+                for temp_syn in self.input_nx.nodes[temp_node]['synonym']:
+                    if 'RELATED' in temp_syn:
+                        term_of_interest=temp_syn.split('\"')[1]
+                        new_synonym_set.add(term_of_interest)
+                    else:
+                        new_synonym_set.add(temp_syn)
+                self.input_nx.nodes[temp_node]['synonym']=list(new_synonym_set)
 
     #def define_attributes_to_maintain(self,attributes):
 
@@ -216,4 +231,17 @@ if __name__ == "__main__":
             my_NodeIDDictParser.reduce_unit_taxonomy()
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/unit.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
+
+    elif ontology=='celllines':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/celllines_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+        if drop_nodes=='True':
+            my_NodeIDDictParser.clean_and_reduce_cellline_taxonomy()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/celllines.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
