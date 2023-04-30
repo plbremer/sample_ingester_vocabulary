@@ -23,8 +23,20 @@ class NodeIDDictParser:
         to 942320
         there are still many "overly specific" nodes, imo, but we dont have the manpower to deeply explore
         hundreds of thousands of nodes
+
+        in our second perusal of the 942320 nodes that were leftover, we decided to also do the following
+        remove all nodes with rank 'no rank' that contained at least one '/' as these were basically tens
+        of thousands of flu virus strains
+
+        remove all 'strain' rank - we will get a decent, realistic strain set from EFO (experimental factor ontology)
+
+        remove all nodes with rank 'species' that contain a number 
+
+        remove all nodes with rank 'species' that contain 'vector'
         '''
 
+
+        #####first removal approach also removes their children
         unclassified_or_environmental_nodes=set()
         for temp_node in self.input_nx.nodes:
             if ('unclassified' in self.input_nx.nodes[temp_node]['scientific_name']) or ('environmental' in self.input_nx.nodes[temp_node]['scientific_name']):
@@ -44,6 +56,48 @@ class NodeIDDictParser:
         self.input_nx.remove_nodes_from(
             unclassified_or_environmental_nodes_and_children
         )
+        ##########################################################
+
+        #second removal approach will simply remove nodes and connect children and parents#
+
+        nodes_to_remove=set()
+        for temp_node in self.input_nx.nodes:
+            if (self.input_nx.nodes[temp_node]['rank']=='no rank' and ('/' in self.input_nx.nodes[temp_node]['scientific_name'])):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='species' and ('vector' in self.input_nx.nodes[temp_node]['scientific_name'])):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='strain'):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='species' and any([temp_char.isdigit() for temp_char in self.input_nx.nodes[temp_node]['scientific_name']])):
+                nodes_to_remove.add(temp_node)
+
+
+        for temp_node in nodes_to_remove:
+            temp_parents=list(self.input_nx.predecessors(temp_node))
+            temp_children=list(self.input_nx.successors(temp_node))
+
+            self.input_nx.remove_node(temp_node)
+
+            for temp_parent in temp_parents:
+                for temp_child in temp_children:
+                    self.input_nx.add_edge(temp_parent,temp_child)
+
+
+
+
+        ####################################################################################
+
+    def reduce_efo_taxonomy(self):
+        '''
+        '''
+        pass
+
+    def reduce_ncit_taxonomy(self):
+        '''
+        '''
+        pass
+
+
 
     def reduce_mesh_taxonomy(self):
         '''
@@ -245,3 +299,16 @@ if __name__ == "__main__":
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/celllines.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
+
+    elif ontology=='ncit':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/ncit_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+        if drop_nodes=='True':
+            my_NodeIDDictParser.clean_and_reduce_cellline_taxonomy()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/celllines.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)   

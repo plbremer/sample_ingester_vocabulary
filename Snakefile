@@ -8,6 +8,20 @@ shrink_ncbi_nx='True'
 
 
 
+rule parse_ncit:
+    output:
+        'results/individual_nxs/ncit_nx.bin'
+    shell:
+        'python3 code/nxparser_ncit.py'
+
+rule parse_efo:
+    output:
+        'results/individual_nxs/efo_nx.bin'
+    shell:
+        'python3 code/nxparser_efo.py'
+
+
+
 rule copy_datasets_to_api:
     input:
         # "results/training_set/valid_string_list_dataframe.bin",
