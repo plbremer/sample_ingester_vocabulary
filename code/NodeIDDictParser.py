@@ -203,9 +203,10 @@ class NodeIDDictParser:
             
             if furthest_ancestor is not None:
                 furthest_ancestor_path=nx.shortest_path(self.input_nx,source=furthest_ancestor,target=temp_node)
-                relabel_dict['temp_node']='|'.join(furthest_ancestor_path)
+                relabel_dict[temp_node]='|'.join(furthest_ancestor_path)
             
-            
+        
+        # print(relabel_dict)
         nx.relabel_nodes(self.input_nx,mapping=relabel_dict,copy=False)
 
 

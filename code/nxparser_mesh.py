@@ -1,5 +1,6 @@
 import networkx as nx
 from collections import defaultdict
+import pickle
 
 class NXParserMesh:
 
@@ -149,8 +150,11 @@ class NXParserMesh:
 if __name__=="__main__":
     my_NXParser_mesh=NXParserMesh()
     my_NXParser_mesh.make_mesh_nx('resources/mesh_ascii_2021.txt')
-    #print(my_NXParser.mesh_nx.nodes)
-    nx.write_gpickle(my_NXParser_mesh.mesh_nx,'results/individual_nxs/mesh_nx.bin')
+
+    # nx.write_gpickle(my_NXParser_mesh.mesh_nx,'results/individual_nxs/mesh_nx.bin')
+    with open('results/individual_nxs/mesh_nx.bin', 'wb') as f:
+        pickle.dump(my_NXParser_mesh.mesh_nx, f)#, pickle.HIGHEST_PROTOCOL)
+
 
     #for the true graph version that didnt end up happening
     # my_NXParser_mesh.construct_graphml_for_neo4j()

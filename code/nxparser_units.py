@@ -1,6 +1,6 @@
 import networkx as nx
 import obonet
-
+import pickle
 
 class NXParserUnits:
 
@@ -31,7 +31,9 @@ class NXParserUnits:
         for element in nodes_to_remove:
             self.units_nx.remove_node(element)  
 
-        nx.write_gpickle(self.units_nx,self.output_address)
+        # nx.write_gpickle(self.units_nx,self.output_address)
+        with open(self.output_address, 'wb') as f:
+            pickle.dump(self.units_nx, f)#, pickle.HIGHEST_PROTOCOL)
 
 
 

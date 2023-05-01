@@ -1,5 +1,6 @@
 import networkx as nx
 import obonet
+import pickle
 
 
 class NXParserCellLines:
@@ -38,7 +39,9 @@ class NXParserCellLines:
         pass
 
     def save(self):
-        nx.write_gpickle(self.units_nx,self.output_address)
+        # nx.write_gpickle(self.units_nx,self.output_address)
+        with open(self.output_address, 'wb') as f:
+            pickle.dump(self.units_nx, f)#, pickle.HIGHEST_PROTOCOL)
 
 
 

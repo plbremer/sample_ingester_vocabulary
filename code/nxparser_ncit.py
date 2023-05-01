@@ -53,6 +53,7 @@ class NXParserNCIT:
         # nx.write_gpickle(self.ncit_nx,self.output_address)
         with open(self.output_address, 'wb') as f:
             pickle.dump(self.ncit_nx, f)#, pickle.HIGHEST_PROTOCOL)
+            
 
 
 
