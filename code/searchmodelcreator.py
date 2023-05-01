@@ -9,7 +9,7 @@ import pandas as pd
 
 class SearchModelCreator:
 
-    def __init__(self,panda_containing_training_set_address,output_directory_address,header_subset_definitions_address,ngram_limit_address):
+    def __init__(self,panda_containing_training_set_address,output_directory_address,header_subset_definitions_address,ngram_limit_address,extra_terms_address):
         self.conglomerate_panda=pd.read_pickle(panda_containing_training_set_address)
         #self.training_set=temp['valid_strings'].values
         self.output_directory_address=output_directory_address
@@ -18,6 +18,11 @@ class SearchModelCreator:
         with open(ngram_limit_address, 'r') as f:
             self.ngram_limit_json=json.load(f) 
         self.tfidf_matrix_dict=dict()
+        self.extra_terms_dataframe=pd.read_csv(extra_terms_address,sep='\t',keep_default_na=False)
+        self.extra_terms_dataframe['node_id']='extraTerms'
+        self.extra_terms_dataframe['ontology']='extraTerms'
+        self.extra_terms_dataframe['use_count']=0
+
 
 
     def create_tfidf_matrix_per_header_defined(self):
@@ -65,6 +70,9 @@ class SearchModelCreator:
 
 
             temp_panda_subset_list=list()
+
+            temp_panda_subset_list.append(self.extra_terms_dataframe)
+
             for temp_subset_definition in temp_subset_definitions:
                 temp_panda_subset_list.append(
                     self.conglomerate_panda.loc[
@@ -72,6 +80,8 @@ class SearchModelCreator:
                     ].copy()
                 )
             
+
+
             temp_conglomerate_panda_subset=pd.concat(temp_panda_subset_list,axis='index',ignore_index=True)
 
 
@@ -147,7 +157,9 @@ if __name__ == "__main__":
         'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
         'results/models/',
         'resources/parameter_files/subset_per_heading.json',
-        'resources/parameter_files/ngram_limits_per_heading.json'
+        'resources/parameter_files/ngram_limits_per_heading.json',
+        'resources/parameter_files/common_extra_terms.tsv'
     )
+
     my_SearchModelCreator.create_tfidf_matrix_per_header_defined()
     my_SearchModelCreator.create_NearestNeighbors_model_per_header_defined()
