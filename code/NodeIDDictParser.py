@@ -2,12 +2,15 @@ import json
 import networkx as nx
 from collections.abc import Iterable
 import sys
-
+import pickle
+import re
 
 class NodeIDDictParser:
 
     def __init__(self,file_path,attributes,main_attribute):
-        self.input_nx=nx.read_gpickle(file_path)
+        # self.input_nx=nx.read_gpickle(file_path)
+        with open(file_path,'rb') as temp_file:
+            self.input_nx=pickle.load(temp_file)
         self.attributes_to_record=attributes
         self.main_attribute=main_attribute
 
@@ -87,15 +90,36 @@ class NodeIDDictParser:
 
         ####################################################################################
 
+
+    def parse_synonyms(self,temp_node):
+        
+        # print(self.input_nx.nodes[temp_node]['synonym'])
+        pattern = r'"(.*?)"'
+        synonym_list=list()
+        for temp_syn in self.input_nx.nodes[temp_node]['synonym']:
+            try:
+                synonym_list.append(re.findall(pattern, temp_syn)[0])
+                
+            except:
+                continue
+                
+         
+        return synonym_list
+
+
     def reduce_efo_taxonomy(self):
         '''
         '''
-        pass
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node].keys():
+                self.input_nx.nodes[temp_node]['synonym']=self.parse_synonyms(temp_node)
 
     def reduce_ncit_taxonomy(self):
         '''
         '''
-        pass
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node].keys():
+                self.input_nx.nodes[temp_node]['synonym']=self.parse_synonyms(temp_node)
 
 
 
@@ -139,6 +163,52 @@ class NodeIDDictParser:
                     else:
                         new_synonym_set.add(temp_syn)
                 self.input_nx.nodes[temp_node]['synonym']=list(new_synonym_set)
+
+
+    def replace_node_id_with_ancestor_path(self):
+        '''
+        when we went to add vocabularies for geography, ethnicity, strain, etc
+        we planned to use the defninitions in 'subset_headings_per_json', where basically
+        the headnode of certain "subtrees" were used to define what is included.
+        it was the case that often times it was simply enough to define the ontology,
+        like in the ncbi taxonomy, to get what we wanted, which was everything. 
+        however, in the case of the mesh, we coudl define subtrees conveniently because
+        the node names were the paths from the root node.
+
+        in order to take advantage of that for trees that do not have that property,
+        we change the names of the node to have that property.
+
+        the general procedure to od this is
+        for each node, get all ancestors
+        for each ancestor, get distance from this node
+        for largest distance, get path explicitly
+        set path to name of this node
+        '''
+        relabel_dict=dict()
+
+        for temp_node in self.input_nx.nodes:
+
+            temp_ancestors=nx.ancestors(self.input_nx,temp_node)
+
+            temp_shortest_path_length=0
+            furthest_ancestor=None
+
+            for temp_ancestor in temp_ancestors:
+
+                temp_length=nx.shortest_path_length(self.input_nx,temp_ancestor,temp_node)
+
+                if temp_length>temp_shortest_path_length:
+                    temp_shortest_path_length=temp_length
+                    furthest_ancestor=temp_ancestor
+            
+            if furthest_ancestor is not None:
+                furthest_ancestor_path=nx.shortest_path(self.input_nx,source=furthest_ancestor,target=temp_node)
+                relabel_dict['temp_node']='|'.join(furthest_ancestor_path)
+            
+            
+        nx.relabel_nodes(self.input_nx,mapping=relabel_dict,copy=False)
+
+
 
     #def define_attributes_to_maintain(self,attributes):
 
@@ -213,6 +283,9 @@ class NodeIDDictParser:
         self.node_id_to_strings_dict=dict()
         for temp_node in self.input_nx.nodes:
             
+            if self.main_attribute not in self.input_nx.nodes[temp_node].keys():
+                continue
+
             self.node_id_to_strings_dict[temp_node]=dict()
             #self.node_id_to_strings_dict[temp_node]=[]
 
@@ -308,7 +381,25 @@ if __name__ == "__main__":
         )
 
         if drop_nodes=='True':
-            my_NodeIDDictParser.clean_and_reduce_cellline_taxonomy()
+            my_NodeIDDictParser.reduce_ncit_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
-        with open('results/individual_vocabulary_jsons/celllines.json', 'w') as fp:
+        with open('results/individual_vocabulary_jsons/ncit.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)   
+
+
+
+
+    elif ontology=='efo':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/efo_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+        if drop_nodes=='True':
+            my_NodeIDDictParser.reduce_efo_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/efo.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)   

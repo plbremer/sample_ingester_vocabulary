@@ -7,6 +7,60 @@ gui_headers=header_vocabulary_json.keys()
 shrink_ncbi_nx='True'
 
 
+rule make_panda_from_conglomerate_file:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    output:
+        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+    shell:
+        "python3 code/pandafromconglomerate.py"  
+
+rule make_conglomerate_json_valid_string_as_key:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
+    output:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    shell:
+        "python3 code/conglomeratejsonvalidstringaskey.py"  
+
+
+rule make_conglomerate_json:
+    input:
+        "results/individual_vocabulary_jsons/mesh.json",
+        "results/individual_vocabulary_jsons/ncbi.json",
+        "results/individual_vocabulary_jsons/genesHuman.json",
+        "results/individual_vocabulary_jsons/unit.json",
+        "results/individual_vocabulary_jsons/drugs.json",
+        #"results/individual_vocabulary_jsons/genesMusMusculus.json",
+        "results/individual_vocabulary_jsons/sex.json",
+        "results/individual_vocabulary_jsons/celllines.json",
+        "results/individual_vocabulary_jsons/efo.json",
+        "results/individual_vocabulary_jsons/ncit.json"
+    output:
+        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
+    shell:
+        "python3 code/conglomeratejsonmaker.py" 
+
+
+
+
+rule efo_to_json:
+    input:
+        "results/individual_nxs/efo_nx.bin"
+    output:
+        "results/individual_vocabulary_jsons/efo.json"
+    shell:
+        "python3 code/NodeIDDictParser.py efo True"
+
+
+rule ncit_to_json:
+    input:
+        "results/individual_nxs/ncit_nx.bin"
+    output:
+        "results/individual_vocabulary_jsons/ncit.json"
+    shell:
+        "python3 code/NodeIDDictParser.py ncit True"
+
 
 rule parse_ncit:
     output:
@@ -84,41 +138,20 @@ rule make_curation_models:
     shell:
         "python3 code/searchmodelcreator.py"
 
-rule make_panda_from_conglomerate_file:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
-    output:
-        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
-    shell:
-        "python3 code/pandafromconglomerate.py"  
-
-
-rule make_conglomerate_json_valid_string_as_key:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
-    output:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
-    shell:
-        "python3 code/conglomeratejsonvalidstringaskey.py"  
+# rule make_panda_from_conglomerate_file:
+#     input:
+#         "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+#     output:
+#         "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+#     shell:
+#         "python3 code/pandafromconglomerate.py"  
 
 
 
 
 
-rule make_conglomerate_json:
-    input:
-        "results/individual_vocabulary_jsons/mesh.json",
-        "results/individual_vocabulary_jsons/ncbi.json",
-        "results/individual_vocabulary_jsons/genesHuman.json",
-        "results/individual_vocabulary_jsons/unit.json",
-        "results/individual_vocabulary_jsons/drugs.json",
-        #"results/individual_vocabulary_jsons/genesMusMusculus.json",
-        "results/individual_vocabulary_jsons/sex.json",
-        "results/individual_vocabulary_jsons/celllines.json"
-    output:
-        "results/conglomerate_vocabulary_jsons/combined_ontologies.json"
-    shell:
-        "python3 code/conglomeratejsonmaker.py" 
+
+
 
 
 rule cellines_to_json:

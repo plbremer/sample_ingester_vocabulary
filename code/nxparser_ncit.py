@@ -12,6 +12,7 @@ class NXParserNCIT:
     def read(self):
         self.ncit_nx=obonet.read_obo(self.input_address)
 
+        self.ncit_nx=self.ncit_nx.reverse()
 
 
     def reduce_by_rules(self):
@@ -44,7 +45,8 @@ class NXParserNCIT:
                     del self.ncit_nx.nodes[temp_node][temp_prop]
                 except:
                     continue
-            
+
+        
 
 
     def save(self):
