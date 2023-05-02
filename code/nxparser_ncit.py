@@ -19,6 +19,8 @@ class NXParserNCIT:
         '''
         could reduce by some subset of "subset" property or parse "comment" to do things like "eliminate 'Crustacean Cell Line'" or whatever
         '''
+
+
         
         #we just took these from the efo exploration
         properties_to_delete=[
@@ -34,7 +36,7 @@ class NXParserNCIT:
             'is_a',
 
             'namespace',
-            'property_value',
+
             'subset',
 
         ]

@@ -76,7 +76,7 @@ class SearchModelCreator:
             for temp_subset_definition in temp_subset_definitions:
                 temp_panda_subset_list.append(
                     self.conglomerate_panda.loc[
-                        self.conglomerate_panda.node_id.str.contains(temp_subset_definition)
+                        self.conglomerate_panda.node_id.str.startswith(temp_subset_definition)
                     ].copy()
                 )
             

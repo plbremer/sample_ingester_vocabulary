@@ -117,6 +117,46 @@ class NodeIDDictParser:
     def reduce_ncit_taxonomy(self):
         '''
         '''
+        '''
+        when making the strain property, we observed that we wanted children of node "organism", but not those nodes that were in the ncbi taxonomy
+        we also wanted to avoid nodes that were also children of the node gene
+        '''
+
+
+        #descendants of organism
+        nodes_scan=nx.descendants(self.input_nx,'NCIT:C14250')
+        #want to remove if it also in ncbi taxonomy or if it is a child of gene
+        children_of_gene_node=set(nx.descendants(self.input_nx,'NCIT:C16612'))
+        nodes_to_remove=set()
+
+
+
+        for temp_node in nodes_scan:
+            if temp_node in children_of_gene_node:
+                nodes_to_remove.add(temp_node)
+                continue
+            
+            for temp_prop in self.input_nx.nodes[temp_node]['property_value']:
+                if 'NCIT:P331' in temp_prop:
+                    nodes_to_remove.add(temp_node)
+                    break
+
+        for temp_node in nodes_to_remove:
+            temp_parents=list(self.input_nx.predecessors(temp_node))
+            temp_children=list(self.input_nx.successors(temp_node))
+
+            self.input_nx.remove_node(temp_node)
+
+            for temp_parent in temp_parents:
+                for temp_child in temp_children:
+                    self.input_nx.add_edge(temp_parent,temp_child)
+
+        # print(len(nodes_scan))
+        # print(len(nodes_to_remove))
+
+
+
+
         for temp_node in self.input_nx.nodes:
             if 'synonym' in self.input_nx.nodes[temp_node].keys():
                 self.input_nx.nodes[temp_node]['synonym']=self.parse_synonyms(temp_node)
