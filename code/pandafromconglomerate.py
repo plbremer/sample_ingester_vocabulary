@@ -18,7 +18,6 @@ class PandaFromConglomerate:
             'node_id':[],
             'main_string':[],
             'ontology':[],
-            
         }
 
         for valid_string in conglomerate_json.keys():
@@ -78,5 +77,3 @@ if __name__=="__main__":
 
     my_PandaFromConglomerate.convert_file()
     my_PandaFromConglomerate.preload_use_counts('resources/bindiscover_metadata_for_use_counts.tsv')
-
-

@@ -8,7 +8,6 @@ class NXParserNCIT:
         self.input_address=input_obo_address
         self.output_address=output_address
 
-
     def read(self):
         self.ncit_nx=obonet.read_obo(self.input_address)
 
@@ -19,9 +18,6 @@ class NXParserNCIT:
         '''
         could reduce by some subset of "subset" property or parse "comment" to do things like "eliminate 'Crustacean Cell Line'" or whatever
         '''
-
-
-        
         #we just took these from the efo exploration
         properties_to_delete=[
             'alt_id',
@@ -48,16 +44,10 @@ class NXParserNCIT:
                 except:
                     continue
 
-        
-
-
     def save(self):
-        # nx.write_gpickle(self.ncit_nx,self.output_address)
         with open(self.output_address, 'wb') as f:
-            pickle.dump(self.ncit_nx, f)#, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.ncit_nx, f)
             
-
-
 
 if __name__=="__main__":
 

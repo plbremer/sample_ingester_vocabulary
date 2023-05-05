@@ -13,8 +13,6 @@ class NXParserEFO:
     def read(self):
         self.efo_nx=obonet.read_obo(self.input_address)
 
-
-
     def reduce_by_rules(self):
         '''
         from jupyter notebook, found list of properties that we didnt care about
@@ -70,9 +68,8 @@ class NXParserEFO:
 
 
     def save(self):
-        # nx.write_gpickle(self.efo_nx,self.output_address)
         with open(self.output_address, 'wb') as f:
-            pickle.dump(self.efo_nx, f)#, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.efo_nx, f)
 
 
 if __name__=="__main__":
