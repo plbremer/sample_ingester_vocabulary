@@ -327,6 +327,7 @@ if __name__ == "__main__":
 
         if drop_nodes=='True':
             my_NodeIDDictParser.reduce_unit_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/unit.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    

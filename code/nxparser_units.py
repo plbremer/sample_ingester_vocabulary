@@ -11,6 +11,7 @@ class NXParserUnits:
 
     def read_and_save(self):
         self.units_nx=obonet.read_obo(self.input_address)
+        self.units_nx=self.units_nx.reverse()
         #from looking at the ontologies
         #we want to remove the prefixes and some strange nodes that have no properties but names looke like PATOsomething
         #remove prefixes
