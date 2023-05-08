@@ -37,8 +37,6 @@ class SearchModelCreator:
         if there is no subset defined, then we are starting with a blank vocabulary set. 
         '''
         for i,temp_header in enumerate(self.header_definition_json.keys()): 
-            if i !=3:
-                continue
             
             
             if len(self.header_definition_json[temp_header])==0:
@@ -162,7 +160,7 @@ if __name__ == "__main__":
         'results/models/',
         'resources/parameter_files/subset_per_heading.json',
         'resources/parameter_files/ngram_limits_per_heading.json',
-        
+        'resources/parameter_files/common_extra_terms.tsv'
     )
 
     my_SearchModelCreator.create_tfidf_matrix_per_header_defined()
