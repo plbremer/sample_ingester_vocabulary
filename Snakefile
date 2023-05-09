@@ -6,30 +6,6 @@ gui_headers=header_vocabulary_json.keys()
 
 shrink_ncbi_nx='True'
 
-rule copy_datasets_to_frontend:
-    input:
-        # expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
-        # expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        # expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
-        # expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
-        "resources/parameter_files/subset_per_heading.json",
-        "resources/parameter_files/ngram_limits_per_heading.json",
-    output:
-        # expand("../frontend/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
-        # expand("../frontend/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        # expand("../frontend/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
-        # expand("../frontend/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
-        "../frontend/additional_files/subset_per_heading.json",
-        "../frontend/additional_files/ngram_limits_per_heading.json",
-    shell:
-        # cp results/models/* ../frontend/additional_files/ 
-        '''
-        cp resources/parameter_files/subset_per_heading.json ../frontend/additional_files/ 
-        cp resources/parameter_files/ngram_limits_per_heading.json ../frontend/additional_files/ 
-        '''
-
-
-
 
 rule copy_datasets_to_api:
     input:
@@ -54,6 +30,30 @@ rule copy_datasets_to_api:
         cp resources/parameter_files/ngram_limits_per_heading.json ../api/additional_files/ 
         '''
         
+rule copy_datasets_to_frontend:
+    input:
+        # expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        # expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
+        # expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        # expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
+        "resources/parameter_files/subset_per_heading.json",
+        "resources/parameter_files/ngram_limits_per_heading.json",
+    output:
+        # expand("../frontend/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        # expand("../frontend/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
+        # expand("../frontend/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        # expand("../frontend/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
+        "../frontend/additional_files/subset_per_heading.json",
+        "../frontend/additional_files/ngram_limits_per_heading.json",
+    shell:
+        # cp results/models/* ../frontend/additional_files/ 
+        '''
+        cp resources/parameter_files/subset_per_heading.json ../frontend/additional_files/ 
+        cp resources/parameter_files/ngram_limits_per_heading.json ../frontend/additional_files/ 
+        '''
+
+
+
 
 
 
