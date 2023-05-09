@@ -34,20 +34,11 @@ class FDADrugTSVParser:
                 series['ActiveIngredient']
             ]
 
-            # self.total_feature_node_id_dict[series['Description']]={
-            #     'node_ids':[series['NCBI GeneID']],
-            #     'formal_word':[series['Description']]
-            # }
-
         with open(self.output_file_path, 'w') as fp:
             json.dump(my_FDADrugTSVParser.total_feature_node_id_dict, fp,indent=4) 
 
 
 if __name__=="__main__":
-    # my_FDADrugTSVParser=FDADrugTSVParser('/home/rictuar/coding_projects/fiehn_work/binbase_sample_ingester/resources/ncbi_genes_human.tsv')
-    # my_FDADrugTSVParser.create_attribute_to_node_id_from_panda()
-    # with open('../intermediate_results/attribute_node_id_pairs/genes_human.json', 'w') as fp:
-    #     json.dump(my_FDADrugTSVParser.total_feature_node_id_dict, fp,indent=4)   
 
     my_FDADrugTSVParser=FDADrugTSVParser(
         'resources/fda_drugs_simplified.tsv',

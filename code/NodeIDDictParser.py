@@ -2,12 +2,15 @@ import json
 import networkx as nx
 from collections.abc import Iterable
 import sys
-
+import pickle
+import re
 
 class NodeIDDictParser:
 
     def __init__(self,file_path,attributes,main_attribute):
-        self.input_nx=nx.read_gpickle(file_path)
+        # self.input_nx=nx.read_gpickle(file_path)
+        with open(file_path,'rb') as temp_file:
+            self.input_nx=pickle.load(temp_file)
         self.attributes_to_record=attributes
         self.main_attribute=main_attribute
 
@@ -23,8 +26,20 @@ class NodeIDDictParser:
         to 942320
         there are still many "overly specific" nodes, imo, but we dont have the manpower to deeply explore
         hundreds of thousands of nodes
+
+        in our second perusal of the 942320 nodes that were leftover, we decided to also do the following
+        remove all nodes with rank 'no rank' that contained at least one '/' as these were basically tens
+        of thousands of flu virus strains
+
+        remove all 'strain' rank - we will get a decent, realistic strain set from EFO (experimental factor ontology)
+
+        remove all nodes with rank 'species' that contain a number 
+
+        remove all nodes with rank 'species' that contain 'vector'
         '''
 
+
+        #####first removal approach also removes their children
         unclassified_or_environmental_nodes=set()
         for temp_node in self.input_nx.nodes:
             if ('unclassified' in self.input_nx.nodes[temp_node]['scientific_name']) or ('environmental' in self.input_nx.nodes[temp_node]['scientific_name']):
@@ -44,6 +59,103 @@ class NodeIDDictParser:
         self.input_nx.remove_nodes_from(
             unclassified_or_environmental_nodes_and_children
         )
+        ##########################################################
+
+        #second removal approach will simply remove nodes and connect children and parents#
+
+        nodes_to_remove=set()
+        for temp_node in self.input_nx.nodes:
+            if (self.input_nx.nodes[temp_node]['rank']=='no rank' and ('/' in self.input_nx.nodes[temp_node]['scientific_name'])):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='species' and ('vector' in self.input_nx.nodes[temp_node]['scientific_name'])):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='strain'):
+                nodes_to_remove.add(temp_node)
+            elif (self.input_nx.nodes[temp_node]['rank']=='species' and any([temp_char.isdigit() for temp_char in self.input_nx.nodes[temp_node]['scientific_name']])):
+                nodes_to_remove.add(temp_node)
+
+
+        for temp_node in nodes_to_remove:
+            temp_parents=list(self.input_nx.predecessors(temp_node))
+            temp_children=list(self.input_nx.successors(temp_node))
+
+            self.input_nx.remove_node(temp_node)
+
+            for temp_parent in temp_parents:
+                for temp_child in temp_children:
+                    self.input_nx.add_edge(temp_parent,temp_child)
+
+
+
+
+        ####################################################################################
+
+
+    def parse_synonyms(self,temp_node):
+        
+        pattern = r'"(.*?)"'
+        synonym_list=list()
+        for temp_syn in self.input_nx.nodes[temp_node]['synonym']:
+            try:
+                synonym_list.append(re.findall(pattern, temp_syn)[0])
+                
+            except:
+                continue
+                
+         
+        return synonym_list
+
+
+    def reduce_efo_taxonomy(self):
+        '''
+        '''
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node].keys():
+                self.input_nx.nodes[temp_node]['synonym']=self.parse_synonyms(temp_node)
+
+    def reduce_ncit_taxonomy(self):
+        '''
+        '''
+        '''
+        when making the strain property, we observed that we wanted children of node "organism", but not those nodes that were in the ncbi taxonomy
+        we also wanted to avoid nodes that were also children of the node gene
+        '''
+
+
+        #descendants of organism
+        nodes_scan=nx.descendants(self.input_nx,'NCIT:C14250')
+        #want to remove if it also in ncbi taxonomy or if it is a child of gene
+        children_of_gene_node=set(nx.descendants(self.input_nx,'NCIT:C16612'))
+        nodes_to_remove=set()
+
+
+
+        for temp_node in nodes_scan:
+            if temp_node in children_of_gene_node:
+                nodes_to_remove.add(temp_node)
+                continue
+            
+            for temp_prop in self.input_nx.nodes[temp_node]['property_value']:
+                if 'NCIT:P331' in temp_prop:
+                    nodes_to_remove.add(temp_node)
+                    break
+
+        for temp_node in nodes_to_remove:
+            temp_parents=list(self.input_nx.predecessors(temp_node))
+            temp_children=list(self.input_nx.successors(temp_node))
+
+            self.input_nx.remove_node(temp_node)
+
+            for temp_parent in temp_parents:
+                for temp_child in temp_children:
+                    self.input_nx.add_edge(temp_parent,temp_child)
+
+
+        for temp_node in self.input_nx.nodes:
+            if 'synonym' in self.input_nx.nodes[temp_node].keys():
+                self.input_nx.nodes[temp_node]['synonym']=self.parse_synonyms(temp_node)
+
+
 
     def reduce_mesh_taxonomy(self):
         '''
@@ -86,63 +198,51 @@ class NodeIDDictParser:
                         new_synonym_set.add(temp_syn)
                 self.input_nx.nodes[temp_node]['synonym']=list(new_synonym_set)
 
-    #def define_attributes_to_maintain(self,attributes):
 
-    # def flatten(self,xs):
-    #     '''
-    #     given a list of elements (can contain arbitrarily nested lists)
-    #     creates a generator? of flattned elements
-    #     warning: strings will become lists of char
-    #     '''
-    #     for x in xs:
-    #         if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
-    #             yield from self.flatten(x)
-    #         else:
-    #             yield x
+    def replace_node_id_with_ancestor_path(self):
+        '''
+        when we went to add vocabularies for geography, ethnicity, strain, etc
+        we planned to use the defninitions in 'subset_headings_per_json', where basically
+        the headnode of certain "subtrees" were used to define what is included.
+        it was the case that often times it was simply enough to define the ontology,
+        like in the ncbi taxonomy, to get what we wanted, which was everything. 
+        however, in the case of the mesh, we coudl define subtrees conveniently because
+        the node names were the paths from the root node.
 
-    # def create_one_values_to_node_id_dict(self,temp_node):
-    #     '''
-    #     This takes a single node and returns a dict
-    #     where the keys (probably many) are the nested values of the node
-    #     and the value for each key is the node ID
-    #     '''
-    #     one_node_id_dict=dict()
-    #     #we make scientific name the endpoint so that it works like the mesh hierarchies
-    #     #scientific_name=self.input_nx.nodes[temp_node][temp_attribute]
-    #     for temp_attribute in self.attributes_that_differentiate_node_id:
-    #         #print(temp_attribute)
-    #         if temp_attribute not in self.input_nx.nodes[temp_node].keys():
-    #             continue
-    #         elif isinstance(self.input_nx.nodes[temp_node][temp_attribute],str):
-    #             #print(total_ncbi_networkx.nodes[temp_node][temp_attribute])
-    #             one_node_id_dict[self.input_nx.nodes[temp_node][temp_attribute]]=[temp_node]
-    #         else:
-    #             #print(set(flatten(total_ncbi_networkx.nodes[temp_node][temp_attribute])))
-    #             temp_dict={
-    #                 element:[temp_node] for element in set(self.flatten(self.input_nx.nodes[temp_node][temp_attribute]))
-    #             }
-    #             one_node_id_dict.update(temp_dict)
-    #     return one_node_id_dict
+        in order to take advantage of that for trees that do not have that property,
+        we change the names of the node to have that property.
 
-    # def create_all_attribute_to_node_id_dict(self):
-    #     '''
-    #     takes an entire networkx and features that help to differentiate nodes
-    #     returns a dict of {attribute:[node_ids]} (i think)
-    #     '''
-    #     self.total_feature_node_id_dict=dict()
-    #     for i,temp_node in enumerate(self.input_nx.nodes):
-    #         small_dict_to_add=self.create_one_values_to_node_id_dict(temp_node)
-    #         for temp_key in small_dict_to_add.keys():
-    #             try:
-    #                 self.total_feature_node_id_dict[temp_key]=self.total_feature_node_id_dict[temp_key]+small_dict_to_add[temp_key]
-    #             except KeyError:
-    #                 self.total_feature_node_id_dict[temp_key]=small_dict_to_add[temp_key]
-    #         # what we had before. this basically erased all but the last entry for any particular node, so like, "Liver Neoplasms" had only one entry
-    #         # self.total_feature_node_id_dict.update(
-    #         #     #self.create_one_values_to_node_id_dict(temp_node)
-    #         # )
+        the general procedure to od this is
+        for each node, get all ancestors
+        for each ancestor, get distance from this node
+        for largest distance, get path explicitly
+        set path to name of this node
+        '''
+        relabel_dict=dict()
 
-    #def create_all_attribute_to_node_id_dict(self,tree_type,formal_word):
+        for temp_node in self.input_nx.nodes:
+
+            temp_ancestors=nx.ancestors(self.input_nx,temp_node)
+
+            temp_shortest_path_length=0
+            furthest_ancestor=None
+
+            for temp_ancestor in temp_ancestors:
+
+                temp_length=nx.shortest_path_length(self.input_nx,temp_ancestor,temp_node)
+
+                if temp_length>temp_shortest_path_length:
+                    temp_shortest_path_length=temp_length
+                    furthest_ancestor=temp_ancestor
+            
+            if furthest_ancestor is not None:
+                furthest_ancestor_path=nx.shortest_path(self.input_nx,source=furthest_ancestor,target=temp_node)
+                relabel_dict[temp_node]='|'.join(furthest_ancestor_path)
+            
+
+        nx.relabel_nodes(self.input_nx,mapping=relabel_dict,copy=False)
+
+
     def create_all_attribute_to_node_id_dict(self):
         '''
         we basically assume that there isnt some crazy nested situaion with respect ot the freature nodes
@@ -154,18 +254,16 @@ class NodeIDDictParser:
             'node id':[strings that map to node id]
         }
         '''
-        #self.total_feature_node_id_dict=dict()
 
         self.node_id_to_strings_dict=dict()
         for temp_node in self.input_nx.nodes:
             
+            if self.main_attribute not in self.input_nx.nodes[temp_node].keys():
+                continue
+
             self.node_id_to_strings_dict[temp_node]=dict()
-            #self.node_id_to_strings_dict[temp_node]=[]
 
             self.node_id_to_strings_dict[temp_node]['valid_strings']=set()
-
-            #self.total_feature_node_id_dict[series['NCBI GeneID']]['valid_strings']
-
 
             for temp_attribute in self.attributes_to_record:
                 
@@ -229,6 +327,7 @@ if __name__ == "__main__":
 
         if drop_nodes=='True':
             my_NodeIDDictParser.reduce_unit_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/unit.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
@@ -245,3 +344,32 @@ if __name__ == "__main__":
         my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
         with open('results/individual_vocabulary_jsons/celllines.json', 'w') as fp:
             json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)    
+
+    elif ontology=='ncit':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/ncit_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+        if drop_nodes=='True':
+            my_NodeIDDictParser.reduce_ncit_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/ncit.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)   
+
+
+    elif ontology=='efo':
+        my_NodeIDDictParser=NodeIDDictParser(
+            'results/individual_nxs/efo_nx.bin',
+            {'name','synonym'},
+            'name'
+        )
+
+        if drop_nodes=='True':
+            my_NodeIDDictParser.reduce_efo_taxonomy()
+        my_NodeIDDictParser.replace_node_id_with_ancestor_path()
+        my_NodeIDDictParser.create_all_attribute_to_node_id_dict()
+        with open('results/individual_vocabulary_jsons/efo.json', 'w') as fp:
+            json.dump(my_NodeIDDictParser.node_id_to_strings_dict, fp,indent=4)   

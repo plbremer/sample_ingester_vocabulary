@@ -2,6 +2,7 @@ import networkx as nx
 import metagenompy
 import numpy as np
 from collections.abc import Iterable
+import pickle
 
 class NXParserNCBI:
 
@@ -32,9 +33,6 @@ if __name__=="__main__":
         'resources/nodes.dmp',
         'resources/names.dmp'
     )
-    nx.write_gpickle(my_NXParserNCBI.ncbi_nx,'results/individual_nxs/ncbi_nx.bin')
 
-    #for the true graph version that didnt end up happening
-    # my_NXParserNCBI.construct_graphml_for_neo4j()
-    # nx.write_graphml(my_NXParserNCBI.ncbi_nx, '../intermediate_results/graphmls/ncbi_graphml.graphml', named_key_ids=True)
-    ### need to save these nx to file
+    with open('results/individual_nxs/ncbi_nx.bin', 'wb') as f:
+        pickle.dump(my_NXParserNCBI.ncbi_nx, f)#, pickle.HIGHEST_PROTOCOL)
