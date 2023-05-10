@@ -31,9 +31,10 @@ class DatabaseCreator:
         metadata_category_string=(' TEXT, '.join(self.metadata_categories))+' TEXT'
         self.study_table_string='''
         CREATE TABLE study_table(
+        author_id TEXT,
         study_id TEXT,
         sample_id TEXT, 
-        sample_parallel_id TEXT,
+        metadata_parallel_id TEXT,
         '''+metadata_category_string+' )'
         
     def create_study_table(self):

@@ -30,6 +30,7 @@ rule copy_datasets_to_api:
         cp results/models/* ../api/additional_files/ 
         cp resources/parameter_files/subset_per_heading.json ../api/additional_files/ 
         cp resources/parameter_files/ngram_limits_per_heading.json ../api/additional_files/ 
+        cp results/database/* ../api/additional_files/ 
         '''
         
 rule copy_datasets_to_frontend:
@@ -54,7 +55,12 @@ rule copy_datasets_to_frontend:
         cp resources/parameter_files/ngram_limits_per_heading.json ../frontend/additional_files/ 
         '''
 
-
+rule make_starting_database:
+    # input:
+    output:
+        "results/database/sample_ingester_database.db"
+    shell:
+        "python3 code/databasecreator.py" 
 
 
 
