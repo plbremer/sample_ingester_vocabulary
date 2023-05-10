@@ -16,6 +16,7 @@ rule copy_datasets_to_api:
         expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
         "resources/parameter_files/subset_per_heading.json",
         "resources/parameter_files/ngram_limits_per_heading.json",
+        "results/database/sample_ingester_database.db"
     output:
         expand("../api/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("../api/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
@@ -23,6 +24,7 @@ rule copy_datasets_to_api:
         expand("../api/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
         "../api/additional_files/subset_per_heading.json",
         "../api/additional_files/ngram_limits_per_heading.json",
+        "../api/additional_files/sample_ingester_database.db"
     shell:
         '''
         cp results/models/* ../api/additional_files/ 
@@ -72,6 +74,7 @@ rule make_curation_models:
         expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
     shell:
         "python3 code/searchmodelcreator.py"
+
 
 
 
