@@ -1,12 +1,13 @@
 import pandas as pd
 import json
-
+import sqlalchemy
 
 class PandaFromConglomerate:
 
-    def __init__(self,input_address,output_address):
+    def __init__(self,input_address,output_address,db_address):
         self.input_address=input_address
         self.output_address=output_address
+        self.db_address=db_address
 
     def convert_file(self):
 
@@ -64,7 +65,76 @@ class PandaFromConglomerate:
             inplace=True
         )
 
-        self.output_panda.to_pickle(self.output_address)
+        # self.output_panda.to_pickle(self.output_address)
+
+
+    def create_connection(self):
+        ## sqlite://<nohostname>/<path>
+        engine=sqlalchemy.create_engine(f"sqlite:///{self.db_address}")
+        # print('got here')
+        self.connection=engine.connect()
+
+
+    def build_vocab_table_string(self):
+        # metadata_category_string=(' TEXT, '.join(self.metadata_categories))+' TEXT'
+        self.vocab_table_string='''
+        CREATE TABLE vocab_table(
+        main_string TEXT,
+        valid_string TEXT,
+        node_id TEXT, 
+        ontology TEXT,
+        use_count INTEGER
+        )
+        '''
+
+    def create_vocab_table(self):
+        self.connection.execute(
+            self.vocab_table_string
+        )
+
+    def upload_conglomerate_to_db(self):
+        self.output_panda.to_sql(
+            'vocab_table',
+            self.connection,
+            if_exists='replace',
+            index=False
+        )
+
+    def create_index_vocab(self):
+
+        '''
+        '''
+
+
+        query=f'''
+        create index vocab_main_and_valid_string
+        on vocab_table (main_string, valid_string)
+        '''
+
+        temp_cursor=self.connection.execute(
+            query
+        )
+
+        query=f'''
+        create index vocab_valid_string
+        on vocab_table (valid_string)
+        '''
+
+        temp_cursor=self.connection.execute(
+            query
+        )
+
+        query=f'''
+        create index vocab_ontology
+        on vocab_table (ontology)
+        '''
+
+        temp_cursor=self.connection.execute(
+            query
+        )
+
+
+        return
 
 
 
@@ -72,8 +142,15 @@ if __name__=="__main__":
 
     my_PandaFromConglomerate=PandaFromConglomerate(
         'results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json',
-        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin",
+        'results/database/sample_ingester_database.db'
     )
 
     my_PandaFromConglomerate.convert_file()
     my_PandaFromConglomerate.preload_use_counts('resources/bindiscover_metadata_for_use_counts.tsv')
+
+    my_PandaFromConglomerate.create_connection()
+    my_PandaFromConglomerate.build_vocab_table_string()
+    my_PandaFromConglomerate.create_vocab_table()
+    my_PandaFromConglomerate.upload_conglomerate_to_db()
+    my_PandaFromConglomerate.create_index_vocab()

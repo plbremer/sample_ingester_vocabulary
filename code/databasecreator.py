@@ -29,6 +29,7 @@ class DatabaseCreator:
     
     def build_study_table_string(self):
         metadata_category_string=(' TEXT, '.join(self.metadata_categories))+' TEXT'
+        #sqlite implicitly makes rowid primary key
         self.study_table_string='''
         CREATE TABLE study_table(
         author_id TEXT,
@@ -41,6 +42,35 @@ class DatabaseCreator:
         self.connection.execute(
             self.study_table_string
         )
+
+    def create_index_study(self):
+
+
+        query=f'''
+        create index study_id
+        on study_table (study_id)
+        '''
+
+        temp_cursor=self.connection.execute(
+            query
+        )
+
+
+        query=f'''
+        create index author_id
+        on study_table (author_id)
+        '''
+
+        temp_cursor=self.connection.execute(
+            query
+        )
+
+
+        return
+
+
+
+
         
 if __name__=="__main__":
     my_DatabaseCreator=DatabaseCreator(
@@ -55,3 +85,4 @@ if __name__=="__main__":
     my_DatabaseCreator.create_connection()
     my_DatabaseCreator.build_study_table_string()
     my_DatabaseCreator.create_study_table()
+    my_DatabaseCreator.create_index_study()

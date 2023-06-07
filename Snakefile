@@ -6,22 +6,21 @@ gui_headers=header_vocabulary_json.keys()
 
 shrink_ncbi_nx='True'
 
-
 rule copy_datasets_to_api:
     input:
         # "results/training_set/valid_string_list_dataframe.bin",
         expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
-        expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
+        # expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        # expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
         "resources/parameter_files/subset_per_heading.json",
         "resources/parameter_files/ngram_limits_per_heading.json",
         "results/database/sample_ingester_database.db"
     output:
         expand("../api/additional_files/tfidfVectorizer_{headers}.bin",headers=gui_headers),
         expand("../api/additional_files/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("../api/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
-        expand("../api/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
+        # expand("../api/additional_files/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        # expand("../api/additional_files/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers),
         "../api/additional_files/subset_per_heading.json",
         "../api/additional_files/ngram_limits_per_heading.json",
         "../api/additional_files/sample_ingester_database.db"
@@ -32,6 +31,39 @@ rule copy_datasets_to_api:
         cp resources/parameter_files/ngram_limits_per_heading.json ../api/additional_files/ 
         cp results/database/* ../api/additional_files/ 
         '''
+
+
+rule make_curation_models:
+    input:
+        # "results/training_set/valid_string_list_dataframe.bin"
+        # "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+        "results/database/sample_ingester_database.db"
+    output:
+        # "results/models/tfidfVectorizer.bin",
+        # "results/models/NearestNeighbors.bin",
+        expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
+        expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
+        # expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
+        # expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
+    shell:
+        "python3 code/searchmodelcreator.py"
+
+
+rule make_database:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    output:
+        "results/database/sample_ingester_database.db"
+    #     "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+    shell:
+        '''
+        python3 code/databasecreator.py
+        python3 code/pandafromconglomerate.py
+        '''
+
+
+
+
         
 rule copy_datasets_to_frontend:
     input:
@@ -55,43 +87,19 @@ rule copy_datasets_to_frontend:
         cp resources/parameter_files/ngram_limits_per_heading.json ../frontend/additional_files/ 
         '''
 
-rule make_starting_database:
-    # input:
-    output:
-        "results/database/sample_ingester_database.db"
-    shell:
-        "python3 code/databasecreator.py" 
 
 
 
 
 
 
-rule make_curation_models:
-    input:
-        # "results/training_set/valid_string_list_dataframe.bin"
-        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
-    output:
-        # "results/models/tfidfVectorizer.bin",
-        # "results/models/NearestNeighbors.bin",
-        expand("results/models/tfidfVectorizer_{headers}.bin",headers=gui_headers),
-        expand("results/models/NearestNeighbors_{headers}.bin",headers=gui_headers),
-        expand("results/models/unique_valid_strings_{headers}.bin",headers=gui_headers),
-        expand("results/models/conglomerate_vocabulary_panda_{headers}.bin",headers=gui_headers)
-    shell:
-        "python3 code/searchmodelcreator.py"
 
 
 
 
 
-rule make_panda_from_conglomerate_file:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
-    output:
-        "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
-    shell:
-        "python3 code/pandafromconglomerate.py"  
+
+
 
 
 rule make_conglomerate_json_valid_string_as_key:

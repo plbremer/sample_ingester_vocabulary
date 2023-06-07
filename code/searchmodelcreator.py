@@ -5,11 +5,15 @@ import os
 import time
 import pickle
 import pandas as pd
+import sqlalchemy
 
 class SearchModelCreator:
 
-    def __init__(self,panda_containing_training_set_address,output_directory_address,header_subset_definitions_address,ngram_limit_address,extra_terms_address):
-        self.conglomerate_panda=pd.read_pickle(panda_containing_training_set_address)
+    def __init__(self,database_address,output_directory_address,header_subset_definitions_address,ngram_limit_address,extra_terms_address):
+        self.database_address=database_address
+        
+        
+        
         self.output_directory_address=output_directory_address
         with open(header_subset_definitions_address, 'r') as f:
             self.header_definition_json=json.load(f) 
@@ -24,7 +28,45 @@ class SearchModelCreator:
         self.extra_terms_dataframe['vocabulary']=self.extra_terms_dataframe['vocabulary'].str.split(',')
         self.extra_terms_dataframe=self.extra_terms_dataframe.explode('vocabulary',ignore_index=True)
 
+        #ie, make them all equally likely
         self.vocabs_to_set_use_count_to_1=["ageUnit","drugDoseUnit","heightUnit","massUnit","timeUnit","volumeUnit","weightUnit"]
+        
+
+    def coerce_db_into_conglomerate_panda(self):
+        '''
+        originally,we did not use a database, rather just a large panda.bin to hold the vocab info.
+        we were motivated to switch to a .db in order ot make vocab additions very fast 
+        everything was working if we started with the conglomerate panda
+        so we just insert a step where we read the .db, coerce to conglomerate panda, then proceed as we already did
+        without otuputting the small conglomerate files or unique vocab term files
+        '''
+
+        fetch_vocab_string='''
+        select rowid,* from vocab_table order by rowid
+        '''
+
+        engine=sqlalchemy.create_engine(f"sqlite:///{self.database_address}")
+        print('got here')
+        connection=engine.connect()
+
+
+        temp_cursor=connection.execute(
+            fetch_vocab_string
+        )
+
+        temp_result=json.dumps([dict(r) for r in temp_cursor])
+
+        # print(temp_result)
+        connection.close()
+        #https://stackoverflow.com/questions/8645250/how-to-close-sqlalchemy-connection-in-mysql
+        engine.dispose()
+
+        self.conglomerate_panda=pd.read_json(temp_result, orient="records")
+
+
+
+        
+
         
         
     def create_tfidf_matrix_per_header_defined(self):
@@ -47,11 +89,11 @@ class SearchModelCreator:
                     self.conglomerate_panda.node_id.str.contains('thisisanimpossiblestringthatmakesapandawithnorows')
                 ]
 
-                temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
+                # temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
                 temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
 
                 temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
-                temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
+                # temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
                 temp_TfidfVectorizer=TfidfVectorizer(
                     analyzer='char',
                     ngram_range=self.ngram_limit_json[temp_header]
@@ -95,7 +137,8 @@ class SearchModelCreator:
             #when the models translates chosen valid strings to nodes, we dont want to ahea access to all of the valid stirngs
             #rather just those specified in the ubset. a good example of this is DDT which is a gnee and a pesticide
             #so we output this panda
-            temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
+            #now ignore because we use db
+            # temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
             
             temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
 
@@ -106,7 +149,9 @@ class SearchModelCreator:
             #     'valid_strings_unique':temp_model_vocabulary
             # }
             temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
-            temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
+            #ordering guaranteed by implicit rowid
+            #.unique() returns elements in order of appearance according to index
+            # temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
 
             temp_TfidfVectorizer=TfidfVectorizer(
                 analyzer='char',
@@ -156,12 +201,16 @@ class SearchModelCreator:
 if __name__ == "__main__":
         
     my_SearchModelCreator=SearchModelCreator(
-        'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
+        # 'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
+        'results/database/sample_ingester_database.db',
+
         'results/models/',
         'resources/parameter_files/subset_per_heading.json',
         'resources/parameter_files/ngram_limits_per_heading.json',
         'resources/parameter_files/common_extra_terms.tsv'
     )
+
+    my_SearchModelCreator.coerce_db_into_conglomerate_panda()
 
     my_SearchModelCreator.create_tfidf_matrix_per_header_defined()
     my_SearchModelCreator.create_NearestNeighbors_model_per_header_defined()
