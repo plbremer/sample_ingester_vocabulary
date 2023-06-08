@@ -1,3 +1,4 @@
+from argparse import _MutuallyExclusiveGroup
 import pandas as pd
 import json
 import sqlalchemy
@@ -83,7 +84,8 @@ class PandaFromConglomerate:
         valid_string TEXT,
         node_id TEXT, 
         ontology TEXT,
-        use_count INTEGER
+        use_count INTEGER,
+        UNIQUE (main_string,valid_string,ontology)
         )
         '''
 
@@ -136,6 +138,16 @@ class PandaFromConglomerate:
 
         return
 
+    # sqlite doesnt really let you alter tables
+    # def create_constraint_vocab(self):
+    #     query=f'''
+    #     ALTER TABLE vocab_table
+    #     ADD UNIQUE (main_string,valid_strong,ontology)
+    #     '''
+
+    #     temp_cursor=self.connection.execute(
+    #         query
+    #     )
 
 
 if __name__=="__main__":
@@ -154,3 +166,4 @@ if __name__=="__main__":
     my_PandaFromConglomerate.create_vocab_table()
     my_PandaFromConglomerate.upload_conglomerate_to_db()
     my_PandaFromConglomerate.create_index_vocab()
+    # my_PandaFromConglomerate.create_constraint_vocab()

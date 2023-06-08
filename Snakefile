@@ -33,6 +33,23 @@ rule copy_datasets_to_api:
         '''
 
 
+
+rule make_database:
+    input:
+        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
+    output:
+        "results/database/sample_ingester_database.db"
+    #     "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
+    shell:
+        '''
+        python3 code/databasecreator.py
+        python3 code/pandafromconglomerate.py
+        '''
+
+
+
+
+
 rule make_curation_models:
     input:
         # "results/training_set/valid_string_list_dataframe.bin"
@@ -48,18 +65,6 @@ rule make_curation_models:
     shell:
         "python3 code/searchmodelcreator.py"
 
-
-rule make_database:
-    input:
-        "results/conglomerate_vocabulary_jsons/combined_valid_string_as_key.json"
-    output:
-        "results/database/sample_ingester_database.db"
-    #     "results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin"
-    shell:
-        '''
-        python3 code/databasecreator.py
-        python3 code/pandafromconglomerate.py
-        '''
 
 
 
