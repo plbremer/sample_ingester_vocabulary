@@ -9,7 +9,8 @@ import sqlalchemy
 
 class SearchModelCreator:
 
-    def __init__(self,database_address,output_directory_address,header_subset_definitions_address,ngram_limit_address,extra_terms_address):
+    def __init__(self,conglomerate_panda_address,database_address,output_directory_address,header_subset_definitions_address,ngram_limit_address,extra_terms_address):
+        self.conglomerate_panda=pd.read_pickle(conglomerate_panda_address)
         self.database_address=database_address
         
         
@@ -31,38 +32,6 @@ class SearchModelCreator:
         #ie, make them all equally likely
         self.vocabs_to_set_use_count_to_1=["ageUnit","drugDoseUnit","heightUnit","massUnit","timeUnit","volumeUnit","weightUnit"]
         
-
-    def coerce_db_into_conglomerate_panda(self):
-        '''
-        originally,we did not use a database, rather just a large panda.bin to hold the vocab info.
-        we were motivated to switch to a .db in order ot make vocab additions very fast 
-        everything was working if we started with the conglomerate panda
-        so we just insert a step where we read the .db, coerce to conglomerate panda, then proceed as we already did
-        without otuputting the small conglomerate files or unique vocab term files
-        '''
-
-        fetch_vocab_string='''
-        select rowid,* from vocab_table order by rowid
-        '''
-
-        engine=sqlalchemy.create_engine(f"sqlite:///{self.database_address}")
-        print('got here')
-        connection=engine.connect()
-
-
-        temp_cursor=connection.execute(
-            fetch_vocab_string
-        )
-
-        temp_result=json.dumps([dict(r) for r in temp_cursor])
-
-        # print(temp_result)
-        connection.close()
-        #https://stackoverflow.com/questions/8645250/how-to-close-sqlalchemy-connection-in-mysql
-        engine.dispose()
-
-        self.conglomerate_panda=pd.read_json(temp_result, orient="records")
-
 
 
         
@@ -90,20 +59,20 @@ class SearchModelCreator:
                 ]
 
                 # temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
-                temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
+                # temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
 
-                temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
-                # temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
-                temp_TfidfVectorizer=TfidfVectorizer(
-                    analyzer='char',
-                    ngram_range=self.ngram_limit_json[temp_header]
-                    #max_df=1,
-                    #min_df=0.001
-                )
-                #no fit transform
-                with open(self.output_directory_address+'tfidfVectorizer'+'_'+temp_header+'.bin','wb') as fp:
-                    pickle.dump(temp_TfidfVectorizer,fp)        
-                continue
+                # temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
+                # # temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
+                # temp_TfidfVectorizer=TfidfVectorizer(
+                #     analyzer='char',
+                #     ngram_range=self.ngram_limit_json[temp_header]
+                #     #max_df=1,
+                #     #min_df=0.001
+                # )
+                # #no fit transform
+                # with open(self.output_directory_address+'tfidfVectorizer'+'_'+temp_header+'.bin','wb') as fp:
+                #     pickle.dump(temp_TfidfVectorizer,fp)        
+                # continue
 
             #collect all subset_definitions
             temp_subset_definitions=self.header_definition_json[temp_header]
@@ -138,7 +107,7 @@ class SearchModelCreator:
             #rather just those specified in the ubset. a good example of this is DDT which is a gnee and a pesticide
             #so we output this panda
             #now ignore because we use db
-            # temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
+            temp_conglomerate_panda_subset.to_pickle(self.output_directory_address+'conglomerate_vocabulary_panda_'+temp_header+'.bin')
             
             temp_model_vocabulary=temp_conglomerate_panda_subset['valid_string'].unique()
 
@@ -148,7 +117,7 @@ class SearchModelCreator:
             #     'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
             #     'valid_strings_unique':temp_model_vocabulary
             # }
-            temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
+            # temp_model_vocabulary_panda=pd.DataFrame.from_dict(temp_model_vocabulary)
             #ordering guaranteed by implicit rowid
             #.unique() returns elements in order of appearance according to index
             # temp_model_vocabulary_panda.to_pickle(self.output_directory_address+'unique_valid_strings_'+temp_header+'.bin')
@@ -167,16 +136,17 @@ class SearchModelCreator:
     def create_NearestNeighbors_model_per_header_defined(self):
         for temp_header in self.header_definition_json.keys():
         
-            if len(self.header_definition_json[temp_header])==0:
-                temp_NN_model=NearestNeighbors(
-                    n_neighbors=50,
-                    n_jobs=5,
-                    metric='cosine'
-                )          
-                #no fit, there is no matrix      
-                with open(self.output_directory_address+'NearestNeighbors'+'_'+temp_header+'.bin','wb') as fp:
-                    pickle.dump(temp_NN_model,fp)
-                continue
+            # not a thing anymore because we add the default terms to all at this point
+            # if len(self.header_definition_json[temp_header])==0:
+            #     temp_NN_model=NearestNeighbors(
+            #         n_neighbors=50,
+            #         n_jobs=5,
+            #         metric='cosine'
+            #     )          
+            #     #no fit, there is no matrix      
+            #     with open(self.output_directory_address+'NearestNeighbors'+'_'+temp_header+'.bin','wb') as fp:
+            #         pickle.dump(temp_NN_model,fp)
+            #     continue
 
 
             temp_NN_model=NearestNeighbors(
@@ -198,10 +168,11 @@ class SearchModelCreator:
         
         return to_append
 
+
 if __name__ == "__main__":
         
     my_SearchModelCreator=SearchModelCreator(
-        # 'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
+        'results/conglomerate_vocabulary_panda/conglomerate_vocabulary_panda.bin',
         'results/database/sample_ingester_database.db',
 
         'results/models/',
@@ -210,7 +181,9 @@ if __name__ == "__main__":
         'resources/parameter_files/common_extra_terms.tsv'
     )
 
-    my_SearchModelCreator.coerce_db_into_conglomerate_panda()
+    # my_SearchModelCreator.coerce_db_into_conglomerate_panda()
 
     my_SearchModelCreator.create_tfidf_matrix_per_header_defined()
     my_SearchModelCreator.create_NearestNeighbors_model_per_header_defined()
+
+
